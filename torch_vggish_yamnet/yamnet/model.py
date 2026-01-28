@@ -162,7 +162,7 @@ class YAMNet(nn.Module):
 
 
 def yamnet_category_metadata():
-    cat_meta_file = osp.join(osp.dirname(osp.realpath(__file__)), 'yamnet_category_meta.yml')
+    cat_meta_file = osp.join(osp.dirname(osp.realpath(__file__)), 'yamnet_category_meta.yaml')
     
     with open(cat_meta_file) as f:
         cat_meta = yaml.safe_load(f)

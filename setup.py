@@ -20,4 +20,8 @@ setuptools.setup(
     ],
     install_requires=['numpy', 'torch', 'torchaudio'],
     python_requires='>=3.6',
+    include_package_data=True,
+    package_data={
+        "torch_vggish_yamnet": ["*.yaml"]
+    }
 )
