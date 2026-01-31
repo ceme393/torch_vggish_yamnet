@@ -18,6 +18,10 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=['numpy', 'torch', 'torchaudio'],
+    install_requires=['numpy', 'torch', 'torchaudio', 'pyyaml'],
     python_requires='>=3.6',
+    include_package_data=True,
+    package_data={
+        "torch_vggish_yamnet": ["*.yaml"]
+    }
 )
