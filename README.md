@@ -21,6 +21,11 @@ converter = WaveformToInput()
 in_tensor = converter(x_in.float(), in_sr)
 in_tensor.shape
 
+# Input signal (x_in) tensor conversion with custom patch hops of 10 Hz
+converter = WaveformToInput()
+in_tensor = converter.waveform_to_log_mel(x_in.float(), in_sr, 0.1)
+in_tensor.shape
+
 # Models init
 embedding_yamnet = yamnet.yamnet(pretrained=True)
 embedding_vggish = vggish.get_vggish(with_classifier=False, pretrained=True)
