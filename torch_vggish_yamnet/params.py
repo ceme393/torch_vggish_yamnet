@@ -128,8 +128,3 @@ class YAMNetParams():
 
     FEATURES_LAYER_NAME = 'features'
     EXAMPLE_PREDICTIONS_LAYER_NAME = 'predictions'
-
-
-# NOTE for our inference, don't need overlapping windows
-# YAMNetParams.PATCH_HOP_SECONDS = YAMNetParams.PATCH_WINDOW_SECONDS
-YAMNetParams.PATCH_HOP_SECONDS = 1.0
