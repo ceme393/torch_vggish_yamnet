@@ -46,7 +46,8 @@ class WaveformToInput(torch.nn.Module):
             waveform: torch tsr [num_audio_channels, num_time_steps]
             sample_rate: per second sample rate
         Returns:
-            batched torch tsr of shape [N, C, T]
+            x: batched torch tsr of shape [N, 1, F, M], where F and M are typically 96 and 64 respectively
+            spectrogram: torch tsr of shape [M, L]
         '''
         x = waveform.mean(axis=0, keepdims=True)  # average over channels
         resampler = ta_trans.Resample(sample_rate, CommonParams.TARGET_SAMPLE_RATE)
@@ -62,21 +63,27 @@ class WaveformToInput(torch.nn.Module):
 
         return x, spectrogram
 
-    def waveform_to_log_mel_batched(self, waveform, sample_rate, patch_hop_seconds = YAMNetParams.PATCH_HOP_SECONDS):
+
+class BatchedWaveformToInput(WaveformToInput):
+    def __init__(self, sample_rate = CommonParams.TARGET_SAMPLE_RATE, patch_hop_seconds = YAMNetParams.PATCH_HOP_SECONDS):
+        super().__init__()
+        self.resampler = ta_trans.Resample(sample_rate, CommonParams.TARGET_SAMPLE_RATE)
+        self.window_size_in_frames = int(round(CommonParams.PATCH_WINDOW_IN_SECONDS / CommonParams.STFT_HOP_LENGTH_SECONDS))
+        self.patch_hop_in_frames = int(round(patch_hop_seconds / CommonParams.STFT_HOP_LENGTH_SECONDS))
+
+    def waveform_to_log_mel(self, waveform):
         '''
         Args:
             waveform: torch tsr [Batch, num_audio_channels, num_time_steps]
-            sample_rate: per second sample rate
         Returns:
-            batched torch tsr of shape [B, N, C, T]
+            x: batched torch tsr of shape [B, N, 1, F, M], where F and M are typically 96 and 64 respectively
         '''
         x = waveform.mean(dim=1, keepdims=True)  # average over channels
-        x = self.mel_trans_ope(x)
+        x = self.resampler(x)
+        x = self.mel_trans_ope(x) # shape = [B, 1, M, T]
 
-        # window_size_in_frames = int(round(CommonParams.PATCH_WINDOW_IN_SECONDS / CommonParams.STFT_HOP_LENGTH_SECONDS))
-        # patch_hop_in_frames = int(round(patch_hop_seconds / CommonParams.STFT_HOP_LENGTH_SECONDS))
-
-        x = x.unfold(-1, 96, 48).permute(0,3,1,4,2)
+        x = x.unfold(-1, self.window_size_in_frames, self.patch_hop_in_frames) # shape = [B, 1, M, N, F]
+        x = x.permute(0,3,1,4,2)
 
         return x
 
