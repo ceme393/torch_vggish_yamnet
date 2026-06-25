@@ -23,13 +23,8 @@ class Conv2d_tf(nn.Conv2d):
         self.padding = padding
         assert self.padding == "SAME"
         self.num_kernel_dims = 2
-        self.forward_func = lambda input, padding: F.conv2d(input, 
-                                                            self.weight, 
-                                                            self.bias, 
-                                                            self.stride,
-                                                            padding=padding, 
-                                                            dilation=self.dilation, 
-                                                            groups=self.groups)
+        # NOTE: no forward_func lambda — broken under copy.deepcopy
+        # (closure captures original self, ignoring deepcopy/prune updates)
 
     def tf_SAME_padding(self, input, dim):
         input_size = input.size(dim + 2)
@@ -49,14 +44,17 @@ class Conv2d_tf(nn.Conv2d):
 
     def forward(self, input):
         if self.padding == "VALID":
-            return self.forward_func(input, padding=0)
+            return F.conv2d(input, self.weight, self.bias, self.stride,
+                            padding=0, dilation=self.dilation, groups=self.groups)
         odd_1, padding_1 = self.tf_SAME_padding(input, dim=0)
         odd_2, padding_2 = self.tf_SAME_padding(input, dim=1)
         if odd_1 or odd_2:
             # NOTE: F.pad argument goes from last to first dim
             input = F.pad(input, [0, odd_2, 0, odd_1])
 
-        return self.forward_func(input, padding=[ padding_1 // 2, padding_2 // 2 ])
+        return F.conv2d(input, self.weight, self.bias, self.stride,
+                        padding=[padding_1 // 2, padding_2 // 2],
+                        dilation=self.dilation, groups=self.groups)
 
 
 class CONV_BN_RELU(nn.Module):
